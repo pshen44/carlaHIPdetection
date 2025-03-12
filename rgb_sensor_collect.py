@@ -1,12 +1,10 @@
+# Description: This script is used to collect images from the camera sensor in FILE/PATH in the Carla simulator.
+# def reset(self): # reset to run another test for learning
+    # return
+# def step(self, action):
+    # return obs, reward, done, extra_info
 
-
-# .step()
-
-def reset(self) # reset to run another test for learning
-
-def step(self, action):
-    return obs, reward, done, extra_info
-
+# connect to the client
 import glob
 import os
 import sys
@@ -19,53 +17,20 @@ try:
 except IndexError:
     pass
 
-
-# ==============================================================================
 # -- imports -------------------------------------------------------------------
-# ==============================================================================
 import carla
 import random
 import random
 import time
 import numpy as np
 import cv2
+# import base64
+# from openai import OpenAI
 
 SHOW_PREVIEW = False
 IM_WIDTH = 640
 IM_HEIGHT = 480
 
-class CarEnv: # create class
-    """This is the Car Environment that we are
-    defining"""
-    SHOW_CAM = SHOW_PREVIEW
-    STEER_AMT = 1.0 # steer left
-    im_width = IM_WIDTH
-    im_height = IM_HEIGHT
-    front_camera = None
-
-    def __init__(self): # create method init
-        self.client = carla.Client # assign fields to object
-        self.client = carla.Client('localhost', 2000)
-        self.client.set_timeout(2.0)
-
-        self.world = client.get_world()
-
-        self.blueprint_library = world.get_blueprint_library()
-        self.blueprint_library.filter('model3')[0]
-    def reset_car(self):
-        """reset car"""
-        self.collision_hist = [] # any collision will be added to vec
-        self.actor_list =[] # track actors as well
-        
-        self.transform = random.choice(self.world.get_map().get.spawn_points())
-        self.vehicle = self.world.spawn_actor(self.model_3, self.transform)
-
-        self.rgb_cam = self.blueprint_library.find('sensor.camera.rgb')
-        self.rgb_settings("image_size_x", f"{self.im_width}")
-        self.rgb_settings("image_size_y", f"{self.im_height}")
-        self.rgb_settings("field_of_view", f"120")
-
-        transform = carla.transform(carla.Location(x=2.5, z=0.7))
 
 
 def process_img(image):
@@ -125,36 +90,3 @@ finally:
     for actor in actor_list:
         actor.destroy()
     print('done')
-# Connect to the client vehicle_physics.pyand retrieve the world object
-# client = carla.Client('localhost', 2000)
-# #client.load_world('Town02')
-# world = client.get_world()
-
-# vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*') # get vehicle blueprints
-
-
-# spawn_points = world.get_map().get_spawn_points()# get spawn points
-# for i in range(0,50):# spawn 50 random cars at spawnpoints
-#     world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
-
-# for vehicle in world.get_actors().filter('*vehicle*'):
-#     vehicle.set_autopilot(True)
-
-# ego_vehicle = world.spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
-
-# # Create a transform to place the camera on top of the vehicle
-# camera_init_trans = carla.Transform(carla.Location(z=1.5))
-# # We create the camera through a blueprint that defines its properties
-# camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
-# # We spawn the camera and attach it to our ego vehicle
-# camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=ego_vehicle)
-
-# camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame)) # RECORD PICTURES FROM CAM SENSOR
-
-
-
-# ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz_2020')
-
-# ego_bp.set_attribute('role_name', 'hero')
-
-# ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
