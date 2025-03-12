@@ -1,8 +1,3 @@
-# Description: This script is used to collect images from the camera sensor in FILE/PATH in the Carla simulator.
-# def reset(self): # reset to run another test for learning
-    # return
-# def step(self, action):
-    # return obs, reward, done, extra_info
 
 # connect to the client
 import glob
