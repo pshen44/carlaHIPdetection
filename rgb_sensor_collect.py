@@ -19,6 +19,7 @@ import random
 import time
 import numpy as np
 import cv2
+import shutil
 # import base64
 # from openai import OpenAI
 
@@ -47,12 +48,11 @@ try:
 
     bp = blueprint_library.filter('model3')[0]
     print(bp)
-
+    # this is for a specific spawn point: spawn_point = carla.Transform(carla.Location(x=-45,y=-130, z=40), carla.Rotation(pitch=0, yaw=180, roll=0))
     spawn_point = random.choice(world.get_map().get_spawn_points())
-
     vehicle = world.spawn_actor(bp, spawn_point)
     vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=0.0))
-    # vehicle.set_autopilot(True)  # if you just wanted some NPCs to drive
+    # vehicle.set_autopilot(True)  # for some NPCs to drive
 
     actor_list.append(vehicle)
 
@@ -75,7 +75,7 @@ try:
 
     # do something with this sensor
     #sensor.listen(lambda data: process_img(data))
-
+    shutil.rmtree('out', ignore_errors=False, onerror=None) # delete out file and contents
     sensor.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame)
                   if image.frame % 60 == 0 else None) # RECORD PICTURES FROM CAM SENSOR
     
