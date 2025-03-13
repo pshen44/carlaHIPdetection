@@ -67,7 +67,7 @@ try:
     # Adjust sensor relative to vehicle 
     spawn_point = carla.Transform(carla.Location(x=2.5, y=0, z=2))
 
-    # spawn the sensor and attach to vehicle.
+    # spawn the sensor and attach to vehicle
     sensor = world.spawn_actor(blueprint, spawn_point, attach_to=vehicle)
 
     # add sensor to list of actors
