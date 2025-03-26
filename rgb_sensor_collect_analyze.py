@@ -37,7 +37,7 @@ def process_img(image):
 actor_list = []
 try:
     client = carla.Client('localhost', 2000)
-    client.set_timeout(200.0)
+    client.set_timeout(10.0)
 
     world = client.get_world()
 
@@ -45,12 +45,27 @@ try:
 
     bp = blueprint_library.filter('coupe_2020')[0]
     print(bp)
+
+    ## ambulance set
+    ambulance_bp = blueprint_library.filter('ambulance')[0]
+    print(ambulance_bp)
+    
+
     # this is for a specific spawn point: spawn_point = carla.Transform(carla.Location(x=-45,y=-130, z=40), carla.Rotation(pitch=0, yaw=180, roll=0))
+    # agent vehicle spawn point [random]
     spawn_point = random.choice(world.get_map().get_spawn_points())
     vehicle = world.spawn_actor(bp, spawn_point)
+    
+    # ambulance spawn point [random]
+    amb_spawn_point = random.choice(world.get_map().get_spawn_points())
+    ambulance = world.spawn_actor(ambulance_bp, amb_spawn_point)
+    ambulance.set_light_state(carla.VehicleLightState.Special1)
+    ambulance.set_autopilot(True)
+    # apply control to main vehicle
     vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=0.0))
-    # vehicle.set_autopilot(True)  # for some NPCs to drive
 
+    # vehicle.set_autopilot(True)  # for some NPCs to drive
+    actor_list.append(ambulance)
     actor_list.append(vehicle)
 
     # https://carla.readthedocs.io/en/latest/cameras_and_sensors
@@ -79,7 +94,7 @@ try:
     sensor.listen(lambda image: (image.save_to_disk('RGB_Collect/%06d.png' % image.frame)
                   if image.frame % 60 == 0 else None, process_img(image))) # RECORD PICTURES FROM CAM SENSOR
     
-
+    print(actor_list)
     time.sleep(8)
 
 finally:
@@ -87,4 +102,4 @@ finally:
         actor.destroy()
     print('done')
 
-import analyze_rgb_output
+# import analyze_rgb_output
