@@ -7,15 +7,21 @@ HIP objects include:
 - Vehicles with hazard lights on
 - Signs with flashing lights
 - Snowplow trucks with hazard lights on
+- etc.
 
 Overview
 
 The agent vehicle is equipped with an RGB camera that captures frames every few seconds. These frames are:
-- Saved to disk (`RGB_Collect/`)
-- Simultaneously sent (one at a time) to GPT-4o via the OpenAI API
-- Analyzed to determine the number of present HIPs, and whether the car should respond (slow down, stop, or change lanes)
+- Saved to disk (`RGB_Collect/`) for user reference.
+The simulation then ends after a given number of seconds.
+- All frames captured are sent to GPT-4o via the OpenAI API at the end of the simulation.
+- Analyzed to determine the number of present HIPs, and whether the car should respond (slow down, stop, or change lanes).
+- Logs all JSON outputs to hip_log.csv for data collection.
 
-All results are printed live during simulation.
+Additionally, there is a live capture script (WIP):
+- Frames captured by the RGB camera are sent during the simulation for streamed responses.
+- Simulation does not need to stop for frame and data collection.
+
 
 ===============================================
 
