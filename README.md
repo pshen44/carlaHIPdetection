@@ -1,6 +1,6 @@
 # High Illumination Priority (HIP) Detection Using CARLA
 
-This project simulates an autonomous vehicle using the *CARLA simulator* (https://carla.org/) and identifies High Illumination Priority (HIP) objects in real time using the *OpenAI GPT-4o*(https://platform.openai.com/docs/guides/vision) vision model.
+This project simulates an autonomous vehicle using the *CARLA simulator* (https://carla.org/) and identifies High Illumination Priority (HIP) objects in real time using the *OpenAI GPT-4.1*(https://platform.openai.com/docs/guides/vision) vision model.
 
 HIP objects include:
 - **Active** emergency vehicles
@@ -25,9 +25,7 @@ Additionally, there is a live capture script (WIP):
 
 ===============================================
 
-Setup
-
-### Requirements
+### Setup + Requirements
 - Python 3.7.X (created on 3.7.16)
 - CARLA 0.9.15
 - OpenAI Python SDK (`openai`)
