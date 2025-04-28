@@ -28,7 +28,7 @@ def handle_image(image):
 
         pil_image = Image.fromarray(array)  
         buffer = io.BytesIO()
-        pil_image.save(buffer, format="JPEG", quality=95)  # High quality JPEG
+        pil_image.save(buffer, format="PNG", quality=100)  # High quality PNG
         encoded = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
         captured_images.append(encoded)
@@ -51,11 +51,11 @@ Lane Numbering Rules:
 - Lanes are numbered from left to right, starting from 1
 - The shoulder is counted as a lane if it's paved and accessible
 - Lanes in opposing lanes are NOT counted e.g. past the double yellow lines
+- Lanes occupied by other vehicles are NOT counted
+- Lanes occupied by the ego vehicle are counted
 
 Car Response Rules:
-- A response is required if the HIP is in the car's current road (any lane)
-- No response needed for HIPs in opposing traffic (except emergency vehicles)
-- ONLY For emergency vehicles, a response is required even if they're in oncoming traffic
+- A response is required if an HIP is detected in any way.
 
 ```json
 {
@@ -79,22 +79,22 @@ The first three images provided ARE ALWAYS EXAMPLES AND ARE NOT PART OF THE ANAL
 ```json
 {
   "image_number": <EXAMPLE2>,
-  "car_lane_position": <2>,
+  "car_lane_position": <1>,
   "available_lane_positions": <1,2,3>,
-  "HIPs": <"Ambulance">,
+  "HIPs": <"Police Car">,
   "car_response": <True>
 }
 ```json
 {
   "image_number": <EXAMPLE3>,
   "car_lane_position": <2>,
-  "available_lane_positions": <1,2,3>,
+  "available_lane_positions": <2,3>,
   "HIPs": <"Ambulance">,
   "car_response": <True>
 }
 
 """
-def analyze_rgb_folder(rgb_dir="RGB_Collect", example_dir="RGB_examples"):
+def analyze_rgb_folder(example_dir="RGB_examples"):
     client = OpenAI()
     example_image_files = sorted(glob.glob(f"{example_dir}/*.png"))
     base64_examples = [encode_image(img) for img in example_image_files]
@@ -106,13 +106,14 @@ def analyze_rgb_folder(rgb_dir="RGB_Collect", example_dir="RGB_examples"):
                 "role": "user",
                 "content": [
                     {"type": "text", "text": gpt_prompt}
-] + [
-    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{examples}"}} for examples in base64_examples
-] + [
-    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img}"}} for img in captured_images
-]
+                ] + [
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{examples}"}} for examples in base64_examples
+                ] + [
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img}"}} for img in captured_images
+                ]
             }
-        ]
+        ],
+        max_tokens=1000
     )
 
     response_text = completion.choices[0].message.content
@@ -131,6 +132,7 @@ try:
 
     bp = blueprint_library.filter('coupe_2020')[0]
     ambulance_bp = blueprint_library.filter('ambulance')[0]
+    police_car_bp = blueprint_library.filter('dodge')[0]
 
     spawn_point = random.choice(world.get_map().get_spawn_points())
     vehicle = world.spawn_actor(bp, spawn_point)
@@ -138,18 +140,26 @@ try:
 
     tm = client.get_trafficmanager()
     tm_port = tm.get_port()
-    num_ambulances = 3
+    num_HIPs_each = 2
 
-    for _ in range(num_ambulances):
+    for _ in range(num_HIPs_each):
         amb_spawn_point = random.choice(world.get_map().get_spawn_points())
         ambulance = world.spawn_actor(ambulance_bp, amb_spawn_point)
         ambulance.set_light_state(carla.VehicleLightState.Special1)
         ambulance.set_autopilot(True, tm_port)
         tm.ignore_lights_percentage(ambulance, 100.0)
         tm.distance_to_leading_vehicle(ambulance,0)
-        tm.vehicle_percentage_speed_difference(ambulance, -400.0)
+        tm.vehicle_percentage_speed_difference(ambulance, -90.0)
         actor_list.append(ambulance)
 
+        police_spawn_point = random.choice(world.get_map().get_spawn_points())
+        police_car = world.spawn_actor(police_car_bp, police_spawn_point)
+        police_car.set_light_state(carla.VehicleLightState.Special1)
+        police_car.set_autopilot(True, tm_port)
+        tm.ignore_lights_percentage(police_car, 100.0)
+        tm.distance_to_leading_vehicle(police_car,0)
+        tm.vehicle_percentage_speed_difference(police_car, -90.0)
+        actor_list.append(police_car)
     blueprint_rgb = blueprint_library.find('sensor.camera.rgb')
     blueprint_rgb.set_attribute('fov', '110')
 
@@ -179,7 +189,7 @@ finally:
     print('Simulation complete')
     
     start_time = time.time()
-    response_text = analyze_rgb_folder("RGB_Collect", "RGB_examples") # run images through GPT
+    response_text = analyze_rgb_folder("RGB_examples") # run images through GPT
     gpt_analysis_time = time.time() - start_time
     print(f"GPT analysis took {gpt_analysis_time:.2f} seconds")
     time.sleep(6)
@@ -197,22 +207,22 @@ def log_to_csv(result_dict, filename="hip_log.csv"):
         writer.writerow(result_dict)
 
 
-try:
-    matches = re.findall(r"{.*?}", response_text, re.DOTALL)
-    for match in matches:
-        try:
-            parsed = json.loads(match)
-            log_to_csv(parsed)
-        except Exception as jerr:
-            print(f"[ERROR] Failed to parse JSON block: {jerr}")
 
-    # Add blank row after logging all JSONs for this run
-    with open("hip_log.csv", "a", newline='') as file:
-        file.write(f"Analysis time: {gpt_analysis_time:.2f}")
-        file.write("\n")
+matches = re.findall(r"{.*?}", response_text, re.DOTALL)
+for match in matches:
+        parsed = json.loads(match)
+        log_to_csv(parsed)
 
-except Exception as e:
-    print(f"[ERROR] Failed to extract/log GPT output: {e}")
+with open("hip_log.csv", "a", newline='') as file:
+    file.write(f"Analysis time: {gpt_analysis_time:.2f}")
+    file.write("\n")
+    total = 0
+    num = float(input("Enter score: "))
+    total = num
+    file.write(f"Score: {total:.2f}")
+    file.write("\n")
+    file.write("\n")
+
 
 
 

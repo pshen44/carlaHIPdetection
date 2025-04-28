@@ -1,4 +1,121 @@
 image_number,car_lane_position,available_lane_positions,HIPs,car_response
+
+1,2,"[2, 3]",[],False
+2,2,"[2, 3]",[],False
+3,2,"[2, 3]",[],False
+4,2,"[2, 3]",[],False
+5,2,"[2, 3]",[],False
+6,2,"[2, 3]",[],False
+7,2,"[2, 3]",[],False
+8,2,"[2, 3]",[],False
+Analysis time: 19.76
+
+Score: 70.00
+
+1,2,"[2, 3]",[],False
+2,2,"[2, 3]",[],False
+3,2,"[2, 3]",[],False
+4,1,"[1, 2]",[],False
+5,1,"[1, 2]",[],False
+Analysis time: 13.33
+
+Score: 100.00
+
+1,2,"[2, 3]",['Police Car'],True
+2,2,[3],[],False
+3,2,"[2, 3]",[],False
+4,2,"[2, 3]",[],False
+5,2,"[2, 3]",[],False
+6,2,"[2, 3]",[],False
+7,2,"[2, 3]",[],False
+8,3,[3],[],False
+Analysis time: 17.60
+
+Score: 80.00
+
+1,1,"[1, 2]",['Police Car'],True
+2,1,"[1, 2]",[],False
+3,1,"[1, 2]",[],False
+4,1,"[1, 2]",[],False
+5,1,"[1, 2]",[],False
+6,1,"[1, 2]",[],False
+7,1,"[1, 2]",[],False
+8,1,"[1, 2]",[],False
+Analysis time: 21.99
+
+Score: 80.00
+
+1,2,"[1, 2, 3]",[],False
+2,2,"[1, 2, 3]",[],False
+3,2,"[2, 3]",[],False
+4,2,"[2, 3]",[],False
+5,2,"[2, 3]",[],False
+6,2,"[2, 3]",[],False
+Analysis time: 19.77
+
+Score: 80.00
+
+1,2,"[2, 3]",[],False
+2,2,"[2, 3]",[],False
+3,2,"[2, 3]",[],False
+4,2,"[2, 3]",[],False
+Analysis time: 11.69
+
+Score: 70.00
+
+1,2,"[2, 3]",[],False
+2,2,"[2, 3]",[],False
+3,2,"[2, 3]",[],False
+4,2,"[2, 3]",[],False
+5,2,"[2, 3]",[],False
+Analysis time: 15.80
+
+Score: 70.00
+
+1,2,"[2, 3, 4]",[],False
+2,3,"[3, 4]",[],False
+3,3,"[3, 4]",['Ambulance'],True
+4,3,"[3, 4]",[],False
+5,3,"[3, 4]",[],False
+6,3,"[3, 4]",['Ambulance'],True
+7,3,"[3, 4]",[],False
+8,3,"[3, 4]",[],False
+Analysis time: 23.59
+
+Score: 30.00
+
+1,2,"[1, 2, 3]",[],False
+2,2,"[1, 2, 3]",[],False
+3,2,"[1, 2, 3]",[],False
+4,2,"[1, 2, 3]",[],False
+5,2,"[1, 2, 3]",[],False
+Analysis time: 12.93
+
+Score: 100.00
+
+1,1,"[1, 2, 3]",[],False
+2,1,"[1, 2, 3]",[],False
+3,1,"[1, 2, 3]",[],False
+4,1,[1],[],False
+5,1,[1],[],False
+6,1,[1],[],False
+7,1,[1],[],False
+8,1,[1],[],False
+9,1,[1],[],False
+10,1,[1],[],False
+Analysis time: 26.39
+Score: 80.00
+
+1,2,"[2, 3]",[],False
+2,2,"[2, 3]",[],False
+3,2,"[2, 3]",[],False
+4,2,"[2, 3]",[],False
+5,2,"[2, 3]",[],False
+6,2,"[2, 3]",[],False
+7,2,"[2, 3]",[],False
+8,2,"[2, 3]",[],False
+9,2,"[2, 3]",[],False
+Analysis time: 27.89
 1,2,"[1, 2, 3]",[],False
 2,2,"[1, 2, 3]",[],False
 3,2,"[1, 2, 3]",[],False
@@ -8,89 +125,3 @@ image_number,car_lane_position,available_lane_positions,HIPs,car_response
 7,2,"[1, 2, 3]",[],False
 8,2,"[1, 2, 3]",[],False
 9,2,"[1, 2, 3]",[],False
-10,2,"[1, 2, 3]",[],False
-11,2,"[1, 2, 3]",[],False
-12,2,"[1, 2, 3]",[],False
-13,2,"[1, 2, 3]",[],False
-Analysis time: 29.51
-1,2,"[1, 2, 3]",[],False
-2,2,"[1, 2, 3]",[],False
-3,2,"[1, 2, 3]",[],False
-4,2,"[1, 2, 3]",[],False
-5,2,"[1, 2, 3]",[],False
-6,2,"[1, 2, 3]",[],False
-7,2,"[1, 2, 3]",[],False
-8,2,"[1, 2, 3]",[],False
-9,2,"[1, 2, 3]",[],False
-10,2,"[1, 2, 3]",[],False
-11,2,"[1, 2, 3]",[],False
-Analysis time: 22.54
-4,2,"[1, 2, 3]",[],False
-5,2,"[1, 2, 3]",[],False
-6,2,"[1, 2, 3]",[],False
-7,2,"[1, 2, 3]",[],False
-8,2,"[1, 3]",[],False
-9,2,"[1, 2, 3]",[],False
-10,2,"[1, 2, 3]",[],False
-11,2,"[1, 2, 3]",[],False
-Analysis time: 23.05
-4,2,"[1, 2, 3, 4]",[],False
-5,2,"[1, 2, 3, 4]",[],False
-6,2,"[1, 2, 3, 4]",[],False
-7,2,"[1, 2, 3, 4]",[],False
-8,2,"[1, 2, 3, 4]",[],False
-9,2,"[1, 2, 3, 4]",['Ambulance'],True
-10,2,"[1, 2, 3, 4]",[],False
-11,2,"[1, 2, 3, 4]",[],False
-12,2,"[1, 2, 3, 4]",[],False
-13,2,"[1, 2, 3, 4]",[],False
-14,2,"[1, 2, 3, 4]",[],False
-Analysis time: 27.430978059768677
-1,1,"[2, 3]",[],False
-2,1,"[2, 3]",[],False
-3,1,"[2, 3]",[],False
-4,1,[2],[],False
-5,1,[2],[],False
-6,1,[2],[],False
-7,1,[2],[],False
-8,1,[2],[],False
-9,1,[2],[],False
-10,1,[2],[],False
-11,1,[2],[],False
-Analysis time: 24.31
-1,2,"[1, 2, 3]",[],False
-2,2,"[1, 2, 3]",[],False
-3,2,"[1, 2, 3]",[],False
-4,2,"[1, 2, 3]",[],False
-5,2,"[1, 2, 3]",[],False
-6,2,"[1, 2, 3]",[],False
-7,2,"[1, 2, 3]",[],False
-8,2,"[1, 2, 3]",[],False
-9,2,"[1, 2, 3]",[],False
-10,2,"[1, 2, 3]",[],False
-Analysis time: 24.14
-1,2,"[1, 2, 3]",['Ambulance'],True
-2,2,"[1, 2, 3]",[],False
-3,1,"[1, 2, 3]",['Ambulance'],True
-4,2,"[1, 2, 3]",[],False
-5,3,"[1, 2, 3]",[],False
-6,3,"[1, 2, 3]",[],False
-7,3,"[1, 2, 3]",[],False
-8,2,"[1, 2, 3]",[],False
-9,2,"[1, 2, 3]",[],False
-10,2,"[1, 2, 3]",[],False
-11,2,"[1, 2, 3]",[],False
-12,2,"[1, 2, 3]",[],False
-13,2,"[1, 2, 3]",[],False
-Analysis time: 20.70
-1,2,"[1, 3]",['Ambulance'],True
-2,2,"[1, 2, 3]",[],False
-3,2,"[1, 2, 3]",['Ambulance'],True
-4,2,"[1, 2, 3, 4]",['Ambulance'],True
-5,2,"[1, 2, 3, 4]",['Ambulance'],True
-6,2,"[1, 2, 3, 4]",['Ambulance'],True
-7,2,"[1, 2, 3, 4]",['Ambulance'],True
-8,2,"[1, 2, 3, 4]",[],False
-9,2,"[1, 2, 3, 4]",[],False
-10,2,"[1, 2, 3, 4]",[],False
-Analysis time: 27.82
