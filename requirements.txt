@@ -1,0 +1,12 @@
+# Simulator client. Must match the CARLA server version you run.
+carla==0.9.16
+numpy
+pillow
+opencv-python-headless
+pyyaml
+matplotlib
+# Model backends (install the ones you use)
+openai>=1.40
+anthropic
+# Tests
+pytest

@@ -1,0 +1,17 @@
+# Small grid used to sanity-check the pipeline (a few minutes on a GPU machine).
+grid:
+  towns: [Town10HD]
+  weathers: [ClearNoon, ClearNight]
+  hip_types: [ambulance, police, hazard_car]
+  lights: [true]
+  placements: [same_lane, adjacent_lane, oncoming]
+  distances: [20]
+  repeats: 1
+  negative_fraction: 0.1
+  seed: 7
+collect:
+  fixed_delta: 0.15
+  warmup_ticks: 2
+  burst_frames: 4
+  burst_stride: 1
+  camera: {width: 640, height: 480, fov: 90, x: 1.5, z: 1.5}

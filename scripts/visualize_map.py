@@ -1,4 +1,9 @@
-import pickle
+"""Plot a CARLA map's roads with numbered spawn points.
+
+    python scripts/visualize_map.py --map Town10HD --save map.png
+
+Adapted from https://github.com/KevinLADLee/carla_dataset_tools/blob/master/utils/visulize_map.py
+"""
 
 import carla
 import argparse
@@ -13,7 +18,10 @@ class Line:
 class MapVisualization:
     def __init__(self, args):
         self.carla_client = carla.Client(args.host, args.port, worker_threads=1)
+        self.carla_client.set_timeout(60.0)
         self.world = self.carla_client.get_world()
+        if args.map and args.map not in self.world.get_map().name:
+            self.world = self.carla_client.load_world(args.map)
         self.map = self.world.get_map()
         self.fig, self.ax = plt.subplots()
         self.line_list = []
@@ -103,9 +111,10 @@ def main():
         help='TCP port of CARLA Simulator (default: 2000)')
     argparser.add_argument(
         '-m', '--map',
-        default='Town02',
-        help='Load a new map to visualize'
+        default=None,
+        help='Load this map first (default: current map)'
     )
+    argparser.add_argument('--save', default=None, help='Save the figure here instead of showing it')
 
     args = argparser.parse_args()
     viz = MapVisualization(args)
@@ -113,15 +122,12 @@ def main():
     viz.draw_spawn_points()
     viz.destroy()
     plt.axis('equal')
-
-    with open('/tmp/map_info.pkl', 'wb') as pickle_file:
-        # Output map visualization info to a pkl file
-        pickle.dump(viz.line_list, pickle_file)
-
-    plt.show()
+    if args.save:
+        plt.savefig(args.save, dpi=200)
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":
     # execute only if run as a script
     main()
-# https://github.com/KevinLADLee/carla_dataset_tools/blob/master/utils/visulize_map.py

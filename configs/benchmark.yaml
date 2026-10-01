@@ -1,0 +1,21 @@
+# Main benchmark grid: 4 weathers x 4 HIP types x lights on/off x 3 placements
+# x 4 distances = 384 positive-grid samples, plus ~15% scenes with no HIP actor.
+# Lights-off emergency vehicles and a normal car (hazard_car with lights off)
+# are hard negatives: per the HIP definition they must NOT be reported.
+grid:
+  towns: [Town10HD]
+  weathers: [ClearNoon, ClearSunset, ClearNight, HardRainNight]
+  hip_types: [ambulance, police, firetruck, hazard_car]
+  lights: [true, false]
+  placements: [same_lane, adjacent_lane, oncoming]
+  distances: [15, 30, 50, 80]
+  repeats: 1
+  negative_fraction: 0.15
+  n_distractors: 2
+  seed: 2026
+collect:
+  fixed_delta: 0.15      # 4 frames span 0.45 s: enough to see emergency strobes and a hazard blink
+  warmup_ticks: 2
+  burst_frames: 4
+  burst_stride: 1
+  camera: {width: 640, height: 480, fov: 90, x: 1.5, z: 1.5}
