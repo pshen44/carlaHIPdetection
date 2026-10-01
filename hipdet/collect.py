@@ -61,8 +61,17 @@ def _hold(vehicle, light_state):
     vehicle.set_light_state(light_state)
 
 
-def run_sample(client, world, scenario: sc.Scenario, settings: CollectSettings, frames_dir: Path):
+def run_sample(client, world, scenario: sc.Scenario, settings: CollectSettings, frames_dir: Path,
+               timings: dict | None = None):
     """Spawn, capture and label one scenario. Returns the record dict, or None if it could not be placed."""
+    timings = {} if timings is None else timings
+    t_last = [time.time()]
+
+    def mark(name):
+        now = time.time()
+        timings[name] = timings.get(name, 0.0) + now - t_last[0]
+        t_last[0] = now
+
     rng = random.Random(scenario.seed)
     world_map = world.get_map()
     night = scenario.weather in NIGHT_WEATHERS
@@ -97,11 +106,14 @@ def run_sample(client, world, scenario: sc.Scenario, settings: CollectSettings, 
                 _hold(v, _light_state("none", False, night))
                 distractors.append(v.type_id)
 
+        mark("spawn")
         for _ in range(settings.warmup_ticks):
             world.tick()
+        mark("warmup")
         rig = cu.CameraRig(pool, ego, settings.camera)
         world.tick()  # first frame after spawning sensors is sometimes black
         rig.drain()
+        mark("sensors")
 
         frame_paths, label = [], None
         for k in range(settings.burst_frames):
@@ -122,6 +134,9 @@ def run_sample(client, world, scenario: sc.Scenario, settings: CollectSettings, 
                     true_dist = ego.get_location().distance(target.get_location())
                 lane, n_lanes = sc.lane_layout(world_map.get_waypoint(ego.get_location()))
                 label = gt.label_sample(scenario, lane, n_lanes, pixels, bbox, true_dist)
+                # The instance camera costs a full extra render per tick; it is only needed once.
+                rig.remove("inst", pool)
+        mark("burst")
         return {
             "sample_id": scenario.sample_id,
             "scenario": scenario.to_dict(),
@@ -133,6 +148,7 @@ def run_sample(client, world, scenario: sc.Scenario, settings: CollectSettings, 
     finally:
         pool.destroy()
         world.tick()
+        mark("cleanup")
 
 
 def collect(scenarios, out_dir, settings: CollectSettings | None = None,
@@ -151,37 +167,41 @@ def collect(scenarios, out_dir, settings: CollectSettings | None = None,
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
     samples_path = out / "samples.jsonl"
-    done = set()
-    if samples_path.exists():  # resume an interrupted collection
-        done = {json.loads(l)["sample_id"] for l in samples_path.read_text().splitlines() if l.strip()}
     skipped_path = out / "skipped.txt"
+    done = set()
+    for path in (samples_path, skipped_path):  # resume an interrupted collection
+        if path.exists():
+            for line in path.read_text().splitlines():
+                if line.strip():
+                    done.add(json.loads(line)["sample_id"] if line.startswith("{") else line.strip())
 
-    current_town, current_weather = None, None
-    world = client.get_world()
+    todo = [(i, s) for i, s in enumerate(scenarios) if s.sample_id not in done]
     t0 = time.time()
     n_new = 0
-    for i, s in enumerate(scenarios):
-        if s.sample_id in done:
-            continue
-        if s.town != current_town:
-            world = cu.load_town(client, s.town)
-            current_town, current_weather = s.town, None
-        if s.weather != current_weather:
-            world.set_weather(getattr(carla.WeatherParameters, s.weather))
-            current_weather = s.weather
+    for town in sorted({s.town for _, s in todo}):
+        world = cu.load_town(client, town)
+        current_weather = None
+        # Stay in synchronous mode for the whole town: toggling it costs seconds per sample.
         with cu.synchronous_mode(client, world, settings.fixed_delta):
-            rec = run_sample(client, world, s, settings, out / "frames")
-        if rec is None:
-            with skipped_path.open("a") as f:
-                f.write(s.sample_id + "\n")
-            log(f"[{i + 1}/{len(scenarios)}] {s.sample_id} skipped (no valid placement)")
-            continue
-        with samples_path.open("a") as f:
-            f.write(json.dumps(rec) + "\n")
-        n_new += 1
-        rate = (time.time() - t0) / n_new
-        g = rec["gt"]
-        log(f"[{i + 1}/{len(scenarios)}] {s.sample_id} {s.weather} {s.hip_type} lit={s.lights_on} "
-            f"{s.placement} {s.distance:.0f}m -> visible={g['target_visible']} px={g['target_pixels']} "
-            f"hip={g['hip_present']} resp={g['response_required']} ({rate:.1f}s/sample)")
+            for i, s in [(i, s) for i, s in todo if s.town == town]:
+                if s.weather != current_weather:
+                    world.set_weather(getattr(carla.WeatherParameters, s.weather))
+                    current_weather = s.weather
+                timings = {}
+                rec = run_sample(client, world, s, settings, out / "frames", timings)
+                if rec is None:
+                    with skipped_path.open("a") as f:
+                        f.write(s.sample_id + "\n")
+                    log(f"[{i + 1}/{len(scenarios)}] {s.sample_id} skipped (no valid placement)")
+                    continue
+                rec["timings_s"] = {k: round(v, 2) for k, v in timings.items()}
+                with samples_path.open("a") as f:
+                    f.write(json.dumps(rec) + "\n")
+                n_new += 1
+                rate = (time.time() - t0) / n_new
+                g = rec["gt"]
+                log(f"[{i + 1}/{len(scenarios)}] {s.sample_id} {s.weather} {s.hip_type} lit={s.lights_on} "
+                    f"{s.placement} {s.distance:.0f}m -> visible={g['target_visible']} "
+                    f"px={g['target_pixels']} hip={g['hip_present']} resp={g['response_required']} "
+                    f"({rate:.1f}s/sample)")
     return out

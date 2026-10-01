@@ -146,9 +146,17 @@ class CameraRig:
             self.queues[name] = q
             self.sensors[name] = sensor
 
+    def remove(self, name: str, pool: "ActorPool"):
+        """Stop and destroy one camera (e.g. the instance camera once ground truth is taken)."""
+        sensor = self.sensors.pop(name)
+        self.queues.pop(name)
+        sensor.stop()
+        pool.sensors.remove(sensor)
+        sensor.destroy()
+
     def get(self, frame: int, timeout: float = 120.0):
-        """Return the (rgb, inst) images for simulator ``frame``."""
-        out = {}
+        """Return the (rgb, inst) images for simulator ``frame`` (inst is None once removed)."""
+        out = {"inst": None}
         for name, q in self.queues.items():
             while True:
                 img = q.get(timeout=timeout)
