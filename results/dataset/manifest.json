@@ -1,0 +1,19 @@
+{
+  "carla_server": "0.9.16",
+  "carla_client": "0.9.16",
+  "settings": {
+    "fixed_delta": 0.15,
+    "warmup_ticks": 2,
+    "burst_frames": 4,
+    "burst_stride": 1,
+    "camera": {
+      "width": 640,
+      "height": 480,
+      "fov": 90,
+      "x": 1.5,
+      "z": 1.5
+    }
+  },
+  "n_scenarios": 442,
+  "started": "2026-10-01T08:50:29"
+}

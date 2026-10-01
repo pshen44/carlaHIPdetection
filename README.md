@@ -10,7 +10,75 @@ the ego car, under controlled lighting and weather. It records a short burst of 
 every sample automatically from simulator state. Any detector (an API vision-language model, a
 human, or a classical baseline) is then scored against those labels.
 
-<!-- RESULTS -->
+## Results (October 2026 run)
+
+442 scenarios were collected in Town10HD: 4 weathers × 4 HIP types × lights on/off × 3 placements × 4 distances, plus scenes with no HIP. That gives 170 samples with a visible lit HIP and 272 without. Every sample was labelled with three Claude models (Opus, Sonnet, Haiku), each run as a **blinded labeller** through Claude Code sub-agents. A labeller saw only randomly renamed frames plus the same prompt the API backends send, never the scenario or the label. Each model was run twice: once on the first frame only, and once on the 4-frame burst. The colour/flicker baselines were fitted on the even-indexed half and are reported on the odd half.
+
+![Example bursts](results/figures/examples.png)
+*Four frames, 0.15 s apart, cropped around the HIP. Emergency light bars and hazard blinkers change between frames; a single frame often catches them dark.*
+
+| predictor | input | recall | precision | FPR | F1 | respond-F1 | ego-lane acc |
+|---|---|---|---|---|---|---|---|
+| Claude Opus | **4-frame burst** | **49.4** | 78.5 | 8.5 | **60.6** | **62.5** | **99.3** |
+| Claude Opus | single frame | 25.3 | 62.3 | 9.6 | 36.0 | 37.3 | 97.5 |
+| Claude Sonnet | 4-frame burst | 34.1 | 76.3 | 6.6 | 47.2 | 48.9 | 77.6 |
+| Claude Sonnet | single frame | 18.8 | 60.4 | 7.7 | 28.7 | 29.4 | 53.2 |
+| Claude Sonnet | single frame, red/blue swapped (old bug) | 18.8 | 62.7 | 7.0 | 29.0 | 30.6 | 58.4 |
+| Claude Haiku | 4-frame burst | 20.6 | 55.6 | 10.3 | 30.0 | 31.7 | 52.0 |
+| Claude Haiku | single frame | 20.6 | 55.6 | 10.3 | 30.0 | 31.7 | 48.0 |
+| flicker baseline (no learning) | 4-frame burst | 27.2 | 58.1 | 14.0 | 37.0 | – | – |
+| colour baseline (no learning) | single frame | 28.3 | 34.2 | 38.8 | 31.0 | – | – |
+
+All numbers are percentages over 442 samples (baselines: 221 test samples). The full breakdowns are in
+[`results/summary.md`](results/summary.md) and the raw per-sample predictions in `results/predictions/`.
+
+![Recall by distance](results/figures/recall_by_distance.png)
+
+**What the data says**
+
+1. **Showing a burst instead of one frame roughly doubles what the stronger models catch.** Opus recall goes
+   from 25% to 49% and Sonnet from 19% to 34%, while false positives stay flat or drop. Both differences are
+   significant in a paired McNemar test (Opus p = 5·10⁻⁶: 68 samples fixed vs 24 broken; Sonnet p = 5·10⁻⁴).
+   Haiku gains nothing (p = 1). With a single frame, a strobe is often caught in its dark phase, and the models
+   (correctly) refuse to call a vehicle with dark lights a HIP.
+2. **Even the best setting misses half the HIPs.** Recall falls from 75% at ≤20 m to 22% beyond 65 m, where a
+   vehicle is only ~10–20 px tall at 640×480. Hazard-light cars are the hardest class: Opus catches 15% even
+   with a burst, because blinkers are small and amber against tail lights.
+3. **False alarms come from lights-off emergency vehicles.** FPR on empty scenes is under 2% for Opus and Sonnet (5% for Haiku), but
+   16–30% on fire trucks and ambulances with their lights off. The models partly answer "is this an emergency vehicle?"
+   rather than "are its lights on?".
+4. **The colour bug in the 2025 code did not change detection.** Feeding the swapped-channel images that the old
+   pipeline produced gives the same recall (18.8% vs 18.8%, McNemar p = 0.90). It was a real bug and is fixed,
+   but light *patterns* matter more to the models than light *colours*.
+5. **Lane reasoning separates the models more than detection does.** Opus identifies the ego lane 99% of the
+   time; Sonnet 53–78%; Haiku ~50%.
+6. **Hand-written flicker detection is weak here.** CARLA's low-quality software rendering (used because this
+   run had no GPU) adds strong per-pixel frame-to-frame noise, so even a denoised flicker detector only
+   reaches AUC 0.57. That is an artefact of the setup, not a property of real cameras, but it means the
+   baseline numbers should not be over-read.
+
+**Caveats.** The scenes are synthetic, static (all vehicles stopped), from a single town, and rendered at low
+quality on CPU. "Claude via sub-agents" sees the same pixels and prompt as the API backend would, but a
+sub-agent labels a batch of 8–32 items in one context, so items are not perfectly independent. The models
+were referred to by family (Opus/Sonnet/Haiku) as served by Claude Code at the time of the run. GPT-4.1 / GPT-4o
+were not evaluated because the run environment had no OpenAI access. The OpenAI backend is implemented
+(`openai:gpt-4.1`) but untested.
+
+## Where to take this next
+
+* **Run the API backends** (`scripts/run_model.py`) on GPT-4.1/4o and Claude to get a cross-vendor table, and
+  rerun collection on a GPU at Epic quality to remove the rendering noise.
+* **Longer and denser bursts** (8–16 frames, or video input): the burst effect is the headline result, so its
+  dose–response curve is the obvious next experiment.
+* **Moving traffic and more towns.** `scripts/live.py` already drives the ego car with emergency vehicles on
+  its route. Logging its decisions against ground truth gives a closed-loop benchmark.
+* **A trained detector baseline** (e.g. a YOLO model fine-tuned on these CARLA crops plus a temporal head), which
+  is what a paper would need to compare against.
+* **Related work to position against:** active emergency vehicle detection with per-frame CNNs plus temporal
+  smoothing ([arXiv 2212.13696](https://arxiv.org/abs/2212.13696)); VLMs as driving agents (*On the Road with
+  GPT-4V(ision)*, DriveLM, DriveMLM); and the US DOT report on how automated vehicles should respond to
+  emergency vehicles.
+
 
 ## How it works
 
@@ -86,7 +154,7 @@ python -m pytest tests                                    # no simulator needed
 | `hipdet/` | the library: CARLA helpers, scenarios, ground truth, collection, VLM backends, baselines, metrics |
 | `scripts/` | command-line entry points (collect, run models, evaluate, figures, live demo, map plot) |
 | `configs/` | scenario grids (`pilot.yaml` small, `benchmark.yaml` main) |
-| `results/` | predictions, metrics, summary tables and figures from the runs reported above |
+| `results/` | per-sample labels (`dataset/`), predictions, metrics, summary tables and figures from the run above |
 | `tests/` | unit tests for everything that does not need the simulator |
 | `legacy/` | the original 2025 scripts and `hip_log.csv`, kept for reference |
 
