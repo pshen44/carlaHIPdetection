@@ -71,7 +71,9 @@ were not evaluated because the run environment had no OpenAI access. The OpenAI 
 * **Longer and denser bursts** (8–16 frames, or video input): the burst effect is the headline result, so its
   dose–response curve is the obvious next experiment.
 * **Moving traffic and more towns.** `scripts/live.py` already drives the ego car with emergency vehicles on
-  its route. Logging its decisions against ground truth gives a closed-loop benchmark.
+  its route and logs every decision next to simulator ground truth. In a test run, the flicker baseline fired
+  on 70% of windows with no HIP in view, because camera motion looks like flicker. A moving-camera benchmark
+  needs a motion-compensated or learned detector.
 * **A trained detector baseline** (e.g. a YOLO model fine-tuned on these CARLA crops plus a temporal head), which
   is what a paper would need to compare against.
 * **Related work to position against:** active emergency vehicle detection with per-frame CNNs plus temporal

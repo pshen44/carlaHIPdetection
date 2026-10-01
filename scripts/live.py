@@ -109,7 +109,8 @@ def main():
             base = L.Position | L.LowBeam if night else L.NONE
             ego.set_light_state(carla.VehicleLightState(base))
             # Emergency vehicles on the ego car's road, ahead of it, driving on autopilot.
-            ego_wp = world.get_map().get_waypoint(ego.get_location())
+            # Use the spawn transform: in synchronous mode a new actor reports (0, 0, 0) until the first tick.
+            ego_wp = world.get_map().get_waypoint(sp.location)
             hips = []
             for k in range(args.n_emergency):
                 for d in (25 + 30 * k, 35 + 30 * k, 45 + 30 * k):
@@ -127,6 +128,7 @@ def main():
                         tm.vehicle_percentage_speed_difference(v, 30.0)  # slower than ego, so it is caught up with
                         hips.append(v)
                         break
+            print(f"spawned {len(hips)} emergency vehicles ahead of the ego car", flush=True)
             rig = cu.CameraRig(pool, ego, cu.CameraSpec(width=640, height=480))
             window = deque(maxlen=args.window)
             n_ticks = int(args.seconds / dt)
