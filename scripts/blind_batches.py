@@ -94,13 +94,16 @@ def cmd_export(args):
 
 
 def cmd_import(args):
-    blind = Path(args.blind)
-    meta = json.loads((blind.parent / f"{blind.name}.key.json").read_text())
-    key = meta["key"]
     out = Path(args.outdir) / f"{args.name}.jsonl"
     out.parent.mkdir(parents=True, exist_ok=True)
-    seen = {}
-    for ans in sorted(blind.glob("batch_*/answers.jsonl")):
+    key, seen, answer_files, mode = {}, {}, [], None
+    for b in args.blind:
+        blind = Path(b)
+        meta = json.loads((blind.parent / f"{blind.name}.key.json").read_text())
+        key.update(meta["key"])
+        mode = meta["mode"]
+        answer_files += sorted(blind.glob("batch_*/answers.jsonl"))
+    for ans in answer_files:
         for line in ans.read_text().splitlines():
             if not line.strip():
                 continue
@@ -110,7 +113,7 @@ def cmd_import(args):
                 continue
             if item in key:
                 pred = parse_prediction(line)
-                pred.update({"sample_id": key[item], "backend": args.name, "mode": meta["mode"]})
+                pred.update({"sample_id": key[item], "backend": args.name, "mode": mode})
                 seen[item] = pred
     missing = [i for i in key if i not in seen]
     with out.open("w") as f:
@@ -132,7 +135,7 @@ def main():
     e.add_argument("--seed", type=int, default=0)
     e.set_defaults(fn=cmd_export)
     i = sub.add_parser("import")
-    i.add_argument("--blind", required=True)
+    i.add_argument("--blind", required=True, nargs="+", help="one or more exported batch folders")
     i.add_argument("--name", required=True)
     i.add_argument("--outdir", default="results/predictions")
     i.set_defaults(fn=cmd_import)

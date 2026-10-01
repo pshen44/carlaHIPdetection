@@ -34,23 +34,34 @@ def _light_mask(frame: np.ndarray, ranges, min_v=170, min_s=110):
     return _hue_mask(h, ranges) & (s >= min_s) & (v >= min_v)
 
 
+# Parameters below were chosen on the calibration half of the first 100 samples.
+# The blur matters: CARLA's low-quality software rendering adds per-pixel temporal
+# noise (mean |frame difference| ~40 grey levels on a static scene), which a
+# per-pixel flicker test mistakes for flashing lights.
+BLUR = 5
+MIN_S, MIN_V = 160, 150
+
+
+def _smooth(frame):
+    return cv2.GaussianBlur(frame, (BLUR, BLUR), 0)
+
+
 def color_score(frames) -> float:
     """Single-frame score: log pixel count of bright red/blue light in the first frame."""
-    m = _light_mask(frames[0], _RED + _BLUE)
+    m = _light_mask(_smooth(frames[0]), _RED + _BLUE, min_v=MIN_V, min_s=MIN_S)
     return float(np.log1p(m.sum()))
 
 
-def flicker_score(frames, min_delta=60) -> float:
-    """Burst score: log pixel count of coloured light that flickers across the burst."""
+def flicker_score(frames, min_delta=80) -> float:
+    """Burst score: log pixel count of coloured light whose brightness changes across the burst."""
     if len(frames) < 2:
         return color_score(frames)
-    grays = np.stack([cv2.cvtColor(f, cv2.COLOR_RGB2HSV)[..., 2].astype(np.int16) for f in frames])
-    delta = grays.max(0) - grays.min(0)
-    colored = np.zeros(grays.shape[1:], dtype=bool)
+    frames = [_smooth(f) for f in frames]
+    vals = np.stack([cv2.cvtColor(f, cv2.COLOR_RGB2HSV)[..., 2].astype(np.int16) for f in frames])
+    delta = vals.max(0) - vals.min(0)
+    colored = np.zeros(vals.shape[1:], dtype=bool)
     for f in frames:
-        colored |= _light_mask(f, _RED + _BLUE + _AMBER)
-    # A little dilation so the halo of a strobe counts with its core.
-    colored = cv2.dilate(colored.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+        colored |= _light_mask(f, _RED + _BLUE + _AMBER, min_v=MIN_V, min_s=MIN_S)
     flick = colored & (delta >= min_delta)
     return float(np.log1p(flick.sum()))
 
