@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Score every sample with the classical baselines and write predictions.
 
-The decision threshold for each baseline is chosen to maximise F1 on the
+The decision threshold for each baseline is chosen to maximise balanced accuracy
+(Youden's J = TPR - FPR) on the
 calibration half of the data (even sample index) and applied to all samples;
 evaluate.py reports metrics on the test half (odd index) for baselines.
 
@@ -42,11 +43,13 @@ def main():
     Path(args.outdir).mkdir(parents=True, exist_ok=True)
     for name, sc in scores.items():
         cal = [(sc[s.sample_id], s.gt["hip_present"]) for s in samples if is_calibration(s.sample_id)]
-        best_t, best_f1 = 0.0, -1.0
+        # Maximising F1 picks "everything is a HIP" when the score is weak, so use Youden's J.
+        best_t, best_j = 0.0, -2.0
         for t in sorted({v for v, _ in cal}):
-            f1 = binary_metrics([(truth, v >= t) for v, truth in cal])["f1"]
-            if f1 > best_f1:
-                best_t, best_f1 = t, f1
+            m = binary_metrics([(truth, v >= t) for v, truth in cal])
+            j = m["recall"] - m["fpr"]
+            if j > best_j:
+                best_t, best_j = t, j
         top = max(sc.values()) or 1.0
         with open(Path(args.outdir) / f"baseline_{name}.jsonl", "w") as f:
             for s in samples:
@@ -57,7 +60,7 @@ def main():
                     "confidence": v / top, "score": v, "threshold": best_t,
                     "split": "cal" if is_calibration(s.sample_id) else "test",
                 }) + "\n")
-        print(f"{name}: threshold={best_t:.3f} (calibration F1={best_f1:.3f})")
+        print(f"{name}: threshold={best_t:.3f} (calibration Youden J={best_j:.3f})")
 
 
 if __name__ == "__main__":
