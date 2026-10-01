@@ -42,7 +42,7 @@ INSTRUCTIONS = """# Labelling batch
 This folder contains {n} items. {per_item}
 
 For each item ID below, look at its image file(s) and judge that item on its own.
-Do not open any file outside this folder.
+Do not open any files other than the image files listed below.
 
 Write your answers to `{answers}`, one JSON object per line, in this form:
 
@@ -63,12 +63,14 @@ def cmd_export(args):
     rng = random.Random(args.seed)
     rng.shuffle(samples)
     out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
+    labellers = args.labellers.split(",") if args.labellers else [None]
     key = {}
     n_frames = 1 if args.mode == "single" else None
     for b in range(0, len(samples), args.batch_size):
-        bdir = out / f"batch_{b // args.batch_size:02d}"
-        bdir.mkdir(exist_ok=True)
+        bname = f"batch_{b // args.batch_size:02d}"
+        # Images are written once and shared; each labeller gets its own instructions/answers folder.
+        img_dir = out / "images" / bname if labellers[0] else out / bname
+        img_dir.mkdir(parents=True, exist_ok=True)
         items = []
         for s in samples[b:b + args.batch_size]:
             item = secrets.token_hex(4)
@@ -79,15 +81,18 @@ def cmd_export(args):
                 if args.swap_rb:
                     arr = arr[:, :, ::-1]
                 name = f"{item}.png" if len(frames) == 1 else f"{item}_t{k}.png"
-                Image.fromarray(arr).save(bdir / name)
+                Image.fromarray(arr).save(img_dir / name)
                 names.append(name)
             key[item] = s.sample_id
-            items.append(f"- `{item}`: " + ", ".join(f"`{bdir / n}`" for n in names))
+            items.append(f"- `{item}`: " + ", ".join(f"`{(img_dir / n).resolve()}`" for n in names))
         per_item = (user_text(1, dt) + " Each item is one image.") if args.mode == "single" else \
             (user_text(len(frames), dt) + " Each item is a set of files `<item>_t0.png` ... in time order.")
-        (bdir / "INSTRUCTIONS.md").write_text(INSTRUCTIONS.format(
-            system_prompt=SYSTEM_PROMPT, n=len(items), per_item=per_item,
-            answers=bdir / "answers.jsonl", items="\n".join(items)))
+        for lab in labellers:
+            bdir = out / lab / bname if lab else img_dir
+            bdir.mkdir(parents=True, exist_ok=True)
+            (bdir / "INSTRUCTIONS.md").write_text(INSTRUCTIONS.format(
+                system_prompt=SYSTEM_PROMPT, n=len(items), per_item=per_item,
+                answers=(bdir / "answers.jsonl").resolve(), items="\n".join(items)))
     (out.parent / f"{out.name}.key.json").write_text(json.dumps(
         {"mode": args.mode, "swap_rb": args.swap_rb, "key": key}, indent=0))
     print(f"wrote {len(key)} items in {(len(key) + args.batch_size - 1) // args.batch_size} batches to {out}")
@@ -102,7 +107,10 @@ def cmd_import(args):
         meta = json.loads((blind.parent / f"{blind.name}.key.json").read_text())
         key.update(meta["key"])
         mode = meta["mode"]
-        answer_files += sorted(blind.glob("batch_*/answers.jsonl"))
+        if args.labeller:
+            answer_files += sorted((blind / args.labeller).glob("batch_*/answers.jsonl"))
+        else:
+            answer_files += sorted(blind.glob("batch_*/answers.jsonl"))
     for ans in answer_files:
         for line in ans.read_text().splitlines():
             if not line.strip():
@@ -133,10 +141,13 @@ def main():
     e.add_argument("--ids", help="file with sample ids to include (default: all)")
     e.add_argument("--swap-rb", action="store_true", help="reproduce the old red/blue swap bug")
     e.add_argument("--seed", type=int, default=0)
+    e.add_argument("--labellers", help="comma-separated labeller names; each gets its own instruction "
+                   "folder <out>/<name>/batch_XX sharing the images in <out>/images")
     e.set_defaults(fn=cmd_export)
     i = sub.add_parser("import")
     i.add_argument("--blind", required=True, nargs="+", help="one or more exported batch folders")
     i.add_argument("--name", required=True)
+    i.add_argument("--labeller", help="read answers from <blind>/<labeller>/batch_XX (exports made with --labellers)")
     i.add_argument("--outdir", default="results/predictions")
     i.set_defaults(fn=cmd_import)
     args = ap.parse_args()
