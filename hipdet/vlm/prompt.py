@@ -21,7 +21,7 @@ brake lights, street lights and traffic lights are NOT HIPs.
 The car must respond (slow down, stop or change lanes) if a HIP is
 - in the car's own lane or another lane travelling in the same direction, or
 - an emergency vehicle in the oncoming lanes,
-and it is within about 80 metres.
+and it is within about 100 metres.
 
 Lane numbering: count only lanes travelling in the same direction as the car, from left to right,
 starting at 1. Do not count oncoming lanes or shoulders.

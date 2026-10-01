@@ -14,7 +14,8 @@ Labelling rules (the prompt states the same rules to the model):
 * The ego car must respond (slow down / stop / change lanes) if a visible HIP
   is on its side of the road (same lane or an adjacent same-direction lane),
   or if a visible *emergency* HIP is in oncoming traffic, and the HIP is
-  within ``RESPONSE_RANGE_M`` metres.
+  within ``RESPONSE_RANGE_M`` metres (beyond the farthest grid distance, so in practice
+  the rule depends on lane relation and HIP type only).
 """
 
 from __future__ import annotations
@@ -24,7 +25,7 @@ import numpy as np
 from .scenarios import EMERGENCY_TYPES
 
 MIN_VISIBLE_PIXELS = 40
-RESPONSE_RANGE_M = 80.0
+RESPONSE_RANGE_M = 100.0
 
 
 def is_hip(hip_type: str, lights_on: bool) -> bool:

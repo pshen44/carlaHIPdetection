@@ -43,7 +43,7 @@ rules, which the prompt also states:
 * A HIP is an emergency vehicle with its emergency lights on, or any vehicle with its hazard lights on,
   covering at least 40 pixels.
 * The car must respond if the HIP is in its own lane or a same-direction lane, or if it is an
-  emergency vehicle in oncoming traffic, within 80 m.
+  emergency vehicle in oncoming traffic, within 100 m.
 * Lanes are numbered from the left, counting only same-direction driving lanes.
 
 **Models** (`hipdet/vlm/`). There is one prompt and one strict JSON output schema for all backends:

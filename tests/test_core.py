@@ -67,7 +67,7 @@ def test_response_rule(hip, lit, place, expected):
 
 def test_invisible_or_far_hip_needs_no_response():
     assert not gt.response_required("ambulance", True, "same_lane", visible=False, distance=30)
-    assert not gt.response_required("ambulance", True, "same_lane", visible=True, distance=120)
+    assert not gt.response_required("ambulance", True, "same_lane", visible=True, distance=150)
 
 
 def test_label_sample_visibility_threshold():
