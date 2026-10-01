@@ -201,8 +201,9 @@ def distractor_waypoints(ego_wp, target_wp, n: int, rng: random.Random):
         w = rng.choice(lanes)
         if w.lane_type != carla.LaneType.Driving:
             continue
-        # Keep the HIP's own lane clear so distractors do not simply hide it.
-        if target_wp is not None and (w.road_id, w.lane_id) == (target_wp.road_id, target_wp.lane_id):
+        # Keep the HIP's own lane clear so distractors do not simply hide it. Compare
+        # lane ids only: one straight lane can span several OpenDRIVE road segments.
+        if target_wp is not None and w.lane_id == target_wp.lane_id:
             continue
         loc = w.transform.location
         taken = [ego_wp] + out + ([target_wp] if target_wp is not None else [])
